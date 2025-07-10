@@ -50,3 +50,88 @@
     println!("{}", b); // 127
     ```
 
+### 4. traits —— rust中的接口
+- trait是rust中的一种概念，它定义了一种行为。trait可以被用于定义类型的行为，也可以被用于定义函数的行为。
+- trait的定义：
+  ```rust
+  trait TraitName {
+      // 定义方法
+      fn method_name(&self) -> return_type;
+  }
+  ```
+- trait的实现：
+  ```rust
+  impl TraitName for TypeName {
+      // 实现方法
+      fn method_name(&self) -> return_type {
+        // do something
+      }
+  }
+  ```
+
+#### 4.1 操作符重载
+- PartialEq接口 用于重载==和!=操作符
+- Add接口 用于重载+操作符
+- Sub接口 用于重载-操作符
+- Mul接口 用于重载*操作符
+- Div接口 用于重载/操作符
+- Rem接口 用于重载%操作符
+- Index接口 用于重载[]操作符
+
+#### 4.2 derive
+- derive是rust中的一个宏，它可以自动为结构体派生实现trait。
+- 示例：
+  ```rust
+  #[derive(Debug)]
+  struct Person {
+      name: String,
+      age: u8,
+  }
+  ```
+
+#### 4.3 接口边界(trait bounds)
+- trait bounds是rust中的一个概念，它定义了一个泛型类型的上边界。
+- 示例：
+  ```rust
+  fn print<T: Debug>(t: &T) {
+      println!("{:?}", t);
+  }
+  ```
+- 这个示例中，`T`是一个泛型类型参数，`Debug`是一个trait。`T: Debug`表示`T`必须为实现`Debug`trait的类型。
+
+#### 4.4 Deref trait
+- deref接口是rust中的一个trait，它定义了一个类型的解引用行为，可以将一个类型的引用解引用为另一个类型的引用。如String类型就实现了deref接口，将String类型的引用解引用为str类型的引用。
+- deref接口的定义：
+  ```rust
+  trait Deref {
+      type Target;
+      
+      fn deref(&self) -> &Self::Target;
+  }
+  ```
+- deref接口的实现：
+  ```rust
+  impl Deref for String {
+      type Target = str;
+      
+      fn deref(&self) -> &str {
+          // [...]
+      }
+  }
+  ```
+
+#### 4.5 Sized trait
+- Sized trait是rust中的一个trait，它表示一个类型在编译时能够确定其占用的内存大小。
+- Sized trait在rust中是一种marker（标记），它本身是空trait，没有任何方法，仅用于编译器在编译时的一些判断和优化。
+- 未实现Sized的类型被称为DST（dynamic sized type, 动态大小类型），如str是一个DST类型。
+- 未实现Sized的类型不能用于函数参数的传递，必须使用其引用类型。
+
+#### 4.6 From和Into trait
+- From和Into是一对双生的trait，它们用于表示某个类型可以从另一个指定类型转换而来。实现From trait会同时自动实现Into trait。
+
+#### 4.7 关联类型(Associated Types)和泛型(Generics)
+- 当一个trait实现需要唯一确定的类型时，使用关联类型
+- 当你想要允许同一个类型对同一个trait有多个不同输入类型的实现时，使用泛型参数
+
+
+
