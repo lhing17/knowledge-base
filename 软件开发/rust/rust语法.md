@@ -133,5 +133,33 @@
 - 当一个trait实现需要唯一确定的类型时，使用关联类型
 - 当你想要允许同一个类型对同一个trait有多个不同输入类型的实现时，使用泛型参数
 
+#### 4.8 Clone trait
+- 用于对一个对象进行深拷贝，会在内存中单独开辟一块空间用于存储拷贝后的对象。
+- 示例：
+  ```rust
+  struct Person {
+      name: String,
+  }
+  impl Clone for Person {
+      fn clone(&self) -> Self {
+          Self {
+              name: self.name.clone(),
+          }
+      }
+  }
+  ```
 
+- 当一个对象作为函数参数传递时，其所有权会交给函数，函数调用后再无法使用该对象。这时我们就可以使用clone方法对原对象进行拷贝，然后将拷贝后的对象作为参数传递给函数。
 
+#### 4.9 Copy trait
+- Copy trait是Clone trait的子trait，它可以隐式地拷贝对象，使得对象作为函数参数等传递时，并不会直接交出所有权，而是使用拷贝的新对象进行操作。
+- 实现Copy trait时一定要先实现Clone trait，可以用#[derive(Clone, Copy)]的方式自动实现。
+- 注意并不是所有的类型都可以实现Copy trait，需要至少满足以下条件：
+  - 首先，由于Copy是Clone的子trait，所以必须实现Clone trait。这是很合理的：如果Rust可以隐式地创建一个类型的新实例，那么它也应该能够通过调用.clone()显式地创建新实例。
+  - 该类型不能在其在内存中占用的std::mem::size_of字节之外管理任何额外的资源（例如堆内存、文件句柄等）
+  - 该类型不能是可变引用（&mut T）。
+- String类型不能实现Copy，因为它管理了额外的资源（字符串在堆内存中的实际数据）；u32等类型实现了Copy接口，因为它们本身只有一个简单的整数值，没有任何额外的资源；&mut u32等类型不能实现Copy，这是因为如果&mut u32实现了Copy，你就可以创建多个指向同一个值的可变引用，并在多个地方同时修改它——这将违反Rust的借用规则！因此，无论T是什么类型，&mut T都不会实现Copy。
+
+#### 4.10 Drop trait
+- Drop trait用于清理某个对象额外管理的资源。当对象离开其作用域时，Rust会自动调用它的drop方法。
+- 由于实现Drop trait的类型一定持有了额外的资源，因此实现Drop trait的类型不能实现Copy trait。
