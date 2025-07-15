@@ -170,3 +170,183 @@
 - 在合适的情况下，为你的类型实现标准trait（如Debug、PartialEq等）。这会使你的类型更符合rust惯用法，更易于使用，并能解锁标准库和生态系统crate提供的大量功能。
 - 如果你需要第三方crate生态系统中的功能，就为你的类型实现这些crate中的trait。
 - 要谨慎使用泛型仅仅是为了在测试中使用mock。这种方法的维护成本可能很高，通常使用其他测试策略会更好。
+
+### 5. 枚举
+#### 5.1 enum
+- 枚举是一种可以将多个相关值组合到一起的类型。
+
+  ```rust
+  /// 枚举定义
+  enum IpAddrKind {
+      V4,
+      V6,
+  }
+  /// 枚举的使用
+  let four = IpAddrKind::V4;
+  let six = IpAddrKind::V6;
+  ```
+- 与Java等语言所不同的是，rust中的枚举值可以包含数据，如：
+  ```rust
+   /// 枚举定义
+  enum IpAddr {
+      V4(u8, u8, u8, u8),
+      V6(String),
+  }
+  /// 枚举的使用
+  let home = IpAddr::V4(127, 0, 0, 1);
+  let loopback = IpAddr::V6(String::from("::1"));
+  ```
+
+#### 5.2 match
+- match表达式可以用于枚举类型，用于匹配不同的枚举值。
+- match表达式的语法：
+  ```rust
+  enum IpAddr {
+      V4,
+      V6,
+  }
+  /// 枚举的使用
+  let four = IpAddr::V4;
+  let six = IpAddr::V6;
+  match four {
+      IpAddr::V4 => println!("ipv4"),
+      IpAddr::V6 => println!("ipv6"),
+  }
+  ```
+- 注意在rust中，match必须匹配所有的枚举值，否则会编译错误。
+
+#### 5.3 if let和let else
+- if let和let else用于只匹配一个枚举值，而match表达式需要匹配所有的枚举值。
+- if let和let else的语法：
+  ```rust
+  enum IpAddr {
+      V4,
+      V6,
+  }
+  /// 枚举的使用
+  let four = IpAddr::V4;
+  let six = IpAddr::V6;
+  if let IpAddr::V4 = four {
+      println!("ipv4");
+  } else {
+      println!("ipv6");
+  }
+  ```
+- 如果else的分支是需要尽早返回的错误场景，可以用let else语法：
+
+  ```rust
+      let IpAddr::V4 = four else {
+        panic!("ipv6");
+      };
+  ```
+
+### 6. 空值处理(nullability)和错误处理(Fallibility)
+
+#### 6.1 Option<T>
+- Option<T>是rust中用于处理空值的枚举类型。
+- Option<T>是一个枚举，它有两个值：Some(T)和None。
+- Some(T)表示有一个值，None表示没有值。
+- Option<T>的使用场景：
+  - 当一个值可能不存在时，使用Option<T>来表示。
+  - 当一个函数可能返回错误时，使用Option<T>来表示。
+- Option<T>的示例：
+  ```rust
+  let some_number = Some(5);
+  let some_string = Some("a string");
+  let absent_number: Option<i32> = None;
+  ```
+- Option<T>的方法：
+  - unwrap：用于获取Some(T)中的值，如果是None，则会panic。
+  - expect：与unwrap类似，但是可以自定义panic信息。
+  - is_some和is_none：用于判断是否是Some或None。
+  - map：用于对Some(T)中的值进行映射。
+  - and_then：用于对Some(T)中的值进行映射，如果是None，则返回None。
+  - or：用于返回Option<T>中的值，如果是Some(T)，则返回Some(T)，如果是None，则返回另一个Option<T>。
+  - or_else：与or类似，但是可以自定义返回值。
+
+#### 6.2 Result<T>
+- Result<T>是rust中用于处理错误的枚举类型。
+- Result<T>是一个枚举，它有两个值：Ok(T)和Err(E)。
+- Ok(T)表示操作成功，Err(E)表示操作失败。
+- Result<T>的使用场景：
+  - 当一个函数可能返回错误时，使用Result<T>来表示。
+- Result<T>的示例：
+  ```rust
+  let two = string::parse::<i32>("2");
+  let two = two.unwrap();
+  ```
+- Result<T>的方法：
+  - unwrap：用于获取Ok(T)中的值，如果是Err(E)，则会panic。
+  - expect：与unwrap类似，但是可以自定义panic信息。
+  - is_ok和is_err：用于判断是否是Ok或Err。
+  - map：用于对Ok(T)中的值进行映射。
+  - map_err：用于对Err(E)中的值进行映射。
+
+#### 6.3 错误枚举
+- 错误枚举是一种自定义错误类型，用于表示函数可能返回的错误。
+- 错误枚举的定义：
+  ```rust
+  enum ErrorKind {
+      InvalidInput,
+      OutOfMemory,
+      UnexpectedError,
+  }
+  ```
+- 错误枚举的使用：
+  ```rust
+  fn some_function() -> Result<(), ErrorKind> {
+      Err(ErrorKind::InvalidInput)
+  }
+  ```
+- 错误枚举的匹配：
+  ```rust
+  match some_function() {
+      Ok(_) => println!("ok"),
+      Err(ErrorKind::InvalidInput) => println!("invalid input"),
+      Err(ErrorKind::OutOfMemory) => println!("out of memory"),
+      Err(ErrorKind::UnexpectedError) => println!("unexpected error"),
+  }
+  ```
+
+#### 6.4 错误接口(Error trait)
+- Error trait是Rust错误处理的基石，其定义如下：
+  ```rust
+  pub trait Error: Debug + Display {}
+  ```
+- 让每个Rust开发者都自己设计错误报告策略是不切实际的：这会浪费时间，而且不同项目之间的错误处理方式也难以协调。这就是为什么Rust提供了std::error::Error trait。
+
+#### 6.5 thiserror——第三方的错误接口
+- 我们已经看到了如何为自定义错误类型"手动"实现Error trait。
+想象一下，如果你必须为代码库中的大多数错误类型都这样做。这会产生大量的样板代码，不是吗？
+
+- 我们可以通过使用thiserror来减少这些样板代码，这是一个Rust crate，它提供了一个过程宏来简化自定义错误类型的创建。
+
+``` rust
+#[derive(thiserror::Error, Debug)]
+enum TicketNewError {
+    #[error("{0}")]
+    TitleError(String),
+    #[error("{0}")]
+    DescriptionError(String),
+}
+```
+
+#### 6.6 TryFrom和TryInto trait
+- 前面我们提到了From和Into接口，它们是一对伴生接口，用于转换类型，但是它们是不可以失败的（如果失败，程序会panic）。
+- TryFrom和TryInto trait是一对用于转换类型的trait，它们可以失败，这是通过返回Result<T, E>来实现的。
+- TryFrom trait定义如下：
+  ```rust
+  pub trait TryFrom<T>: Sized {
+      type Error;
+      fn try_from(value: T) -> Result<Self, Self::Error>;
+  }
+  ```
+- TryInto trait定义如下：
+  ```rust
+  pub trait TryInto<T>: Sized {
+      type Error;
+      fn try_into(self) -> Result<T, Self::Error>;
+  }
+  ```
+- TryFrom和TryInto trait的使用场景：
+  - 当你需要将一个类型转换为另一个类型时，但是转换可能失败，并且你希望在失败时返回一个自定义的错误类型。
